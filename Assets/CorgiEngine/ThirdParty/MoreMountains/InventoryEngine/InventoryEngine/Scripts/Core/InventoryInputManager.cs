@@ -139,8 +139,10 @@ namespace MoreMountains.InventoryEngine
 		#else
 		[Header("Key Mapping")]
 		[MMInformation("Here you need to set the various key bindings you prefer. There are some by default but feel free to change them.", MMInformationAttribute.InformationType.Info, false)]
-		/// the key used to open/close the inventory
-		public KeyCode ToggleInventoryKey = KeyCode.I;
+        /// the key used to open/close the inventory
+        public InventoryDisplay ParentInventoryDisplay;
+
+        public KeyCode ToggleInventoryKey = KeyCode.I;
 		/// the alt key used to open/close the inventory
 		public KeyCode ToggleInventoryAltKey = KeyCode.Joystick1Button6;
 		/// the key used to open the inventory
@@ -408,8 +410,10 @@ namespace MoreMountains.InventoryEngine
 				_canvasGroup.blocksRaycasts = true;
 			}
 
-			// we open our inventory
-			MMInventoryEvent.Trigger(MMInventoryEventType.InventoryOpens, null, TargetInventoryDisplay.TargetInventoryName, TargetInventoryDisplay.TargetInventory.Content[0], 0, 0, TargetInventoryDisplay.PlayerID);
+            // we open our inventory
+            int index = ParentInventoryDisplay.CurrentlySelectedInventorySlot()?.Index ?? 0;
+            print(index);
+            MMInventoryEvent.Trigger(MMInventoryEventType.InventoryOpens, ParentInventoryDisplay.CurrentlySelectedInventorySlot(), TargetInventoryDisplay.TargetInventoryName, TargetInventoryDisplay.TargetInventory.Content[index], 0, index, TargetInventoryDisplay.PlayerID);
 			MMGameEvent.Trigger("inventoryOpens");
 			InventoryIsOpen = true;
 
@@ -426,8 +430,9 @@ namespace MoreMountains.InventoryEngine
 			{
 				_canvasGroup.blocksRaycasts = false;
 			}
-			// we close our inventory
-			MMInventoryEvent.Trigger(MMInventoryEventType.InventoryCloses, null, TargetInventoryDisplay.TargetInventoryName, null, 0, 0, TargetInventoryDisplay.PlayerID);
+            // we close our inventory
+            int index = ParentInventoryDisplay.CurrentlySelectedInventorySlot()?.Index ?? 0;
+            MMInventoryEvent.Trigger(MMInventoryEventType.InventoryCloses, ParentInventoryDisplay.CurrentlySelectedInventorySlot(), TargetInventoryDisplay.TargetInventoryName, TargetInventoryDisplay.TargetInventory.Content[index], 0, index, TargetInventoryDisplay.PlayerID);
 			MMGameEvent.Trigger("inventoryCloses");
 			InventoryIsOpen = false;
 
@@ -480,8 +485,8 @@ namespace MoreMountains.InventoryEngine
 
 			if (_openInventoryKeyPressed)
 			{
-				OpenInventory();
-			}
+					OpenInventory();
+				}
 
 			if (_closeInventoryKeyPressed)
 			{
