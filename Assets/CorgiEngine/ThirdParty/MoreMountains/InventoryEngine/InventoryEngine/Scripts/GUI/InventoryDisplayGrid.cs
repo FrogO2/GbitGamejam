@@ -7,6 +7,6 @@ namespace MoreMountains.InventoryEngine
 	/// </summary>
 	public class InventoryDisplayGrid : MonoBehaviour 
 	{
-				
-	}
+
+    }
 }

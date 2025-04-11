@@ -15,6 +15,7 @@ namespace MoreMountains.InventoryEngine
 	/// </summary>
 	public class InventoryDisplay : MonoBehaviour, MMEventListener<MMInventoryEvent>
 	{
+		public InventoryInputManager inventoryInputManager;
 		[Header("Binding")]
 		/// the name of the inventory to display
 		[MMInformation("An InventoryDisplay is a component that will handle the visualization of the data contained in an Inventory. Start by specifying the name of the inventory you want to display.",MMInformationAttribute.InformationType.Info,false)]
@@ -555,6 +556,9 @@ namespace MoreMountains.InventoryEngine
 				newSlot.AddComponent<Image> ();
 				newSlot.MMGetComponentNoAlloc<Image> ().raycastTarget = true;
 
+				newSlot.AddComponent<SlotRightClickHandler> ();
+				newSlot.GetComponent<SlotRightClickHandler>().inventoryInputManager = inventoryInputManager;
+				
 				_slotPrefab = newSlot.AddComponent<InventorySlot> ();
 				_slotPrefab.transition = Selectable.Transition.SpriteSwap;
 
@@ -727,12 +731,33 @@ namespace MoreMountains.InventoryEngine
 				}
 			}			
 		}
+        public virtual void Focus(int index)
+        {
+            if (!EnableNavigation)
+            {
+                return;
+            }
 
-		/// <summary>
-		/// Returns the currently selected inventory slot
-		/// </summary>
-		/// <returns>The selected inventory slot.</returns>
-		public virtual InventorySlot CurrentlySelectedInventorySlot()
+            if (SlotContainer.Count > 0)
+            {
+                SlotContainer[index].Select();
+            }
+
+            if (EventSystem.current.currentSelectedGameObject == null)
+            {
+                InventorySlot newSlot = transform.GetComponentInChildren<InventorySlot>();
+                if (newSlot != null)
+                {
+                    EventSystem.current.SetSelectedGameObject(newSlot.gameObject);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the currently selected inventory slot
+        /// </summary>
+        /// <returns>The selected inventory slot.</returns>
+        public virtual InventorySlot CurrentlySelectedInventorySlot()
 		{
 			return _currentlySelectedSlot;
 		}
@@ -910,7 +935,7 @@ namespace MoreMountains.InventoryEngine
 					break;
 
 				case MMInventoryEventType.InventoryOpens:
-					Focus();
+					Focus(inventoryEvent.Index);
 					InventoryDisplay.CurrentlyBeingMovedItemIndex = -1;
 					IsOpen = true;
 					EventSystem.current.sendNavigationEvents = true;
@@ -929,7 +954,7 @@ namespace MoreMountains.InventoryEngine
 
 				case MMInventoryEventType.Redraw:
 					RedrawInventoryDisplay ();
-					break;
+					break; 
 
 				case MMInventoryEventType.InventoryLoaded:
 					RedrawInventoryDisplay ();

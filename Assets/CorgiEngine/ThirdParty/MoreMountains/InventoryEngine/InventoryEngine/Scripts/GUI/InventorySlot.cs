@@ -23,6 +23,7 @@ namespace MoreMountains.InventoryEngine
 		public RectTransform IconRectTransform;
 		public Image IconImage;
 		public Text QuantityText;
+		
 
 		public InventoryItem CurrentItem
 		{
@@ -55,6 +56,7 @@ namespace MoreMountains.InventoryEngine
 		{
 			base.Start();
 			this.onClick.AddListener(SlotClicked);
+			
 		}
 
 		/// <summary>
