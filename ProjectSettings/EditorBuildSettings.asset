@@ -170,7 +170,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/CorgiEngine/Demos/Retro/RetroCopter.unity
     guid: 9fe3f55d8fbc69e498173731635e42f5
-  - enabled: 1
+  - enabled: 0
     path: Assets/CorgiEngine/Demos/Retro/RetroVania.unity
     guid: 283c53fb6e78f594580ce1b6cc9db42e
   - enabled: 0
@@ -224,5 +224,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/CorgiEngine/ThirdParty/MoreMountains/MMTools/Core/MMSceneLoading/LoadingScreens/MMAdditiveLoadingScreenSimple.unity
     guid: 945e5b97212e8e74ebcd35bddde3970c
+  - enabled: 1
+    path: Assets/Scenes/New Scene.unity
+    guid: 111a96117fdc85f45a95036ca1755054
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
