@@ -153,7 +153,60 @@ namespace MoreMountains.CorgiEngine
 		MMEventListener<MMGameEvent>, 
 		MMEventListener<CorgiEngineEvent>, 
 		MMEventListener<CorgiEnginePointsEvent>
-	{		
+	{	
+		// 在 GameManager 类内添加如下代码
+		// 设置时间参数，方便随着时间改变游戏场景
+		[Header("Timed Scene Effects")]
+		[Tooltip("触发效果的等待时间（秒）")]
+		public float TimeThreshold = 5f;
+		[Tooltip("全黑持续时间（秒）")]
+		public float DarkDuration = 1f;
+
+		protected float _timeElapsed;
+		protected bool _effectTriggered;
+
+		protected void Update()
+		{	
+			if (!_effectTriggered)
+			{
+				_timeElapsed += Time.deltaTime;
+				
+				if (_timeElapsed >= TimeThreshold)
+				{
+					StartCoroutine(SceneDarknessEffect());
+					_effectTriggered = true;
+				}
+			}
+		}
+
+		protected virtual IEnumerator SceneDarknessEffect()
+		{
+			// 触发全黑效果
+			MMFadeInEvent.Trigger(DarkDuration/2, new MMTweenType(MMTween.MMTweenCurve.EaseInCubic), 0, false, LevelManager.Instance.Players[0].transform.position);
+			
+			yield return new WaitForSeconds(DarkDuration);
+			
+			// 恢复场景亮度
+			MMFadeOutEvent.Trigger(DarkDuration/2, new MMTweenType(MMTween.MMTweenCurve.EaseOutCubic), 0, false, LevelManager.Instance.Players[0].transform.position);
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		[Header("Settings")]
 
 		/// the target frame rate for the game
