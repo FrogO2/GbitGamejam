@@ -171,7 +171,7 @@ EditorBuildSettings:
     path: Assets/CorgiEngine/Demos/Retro/RetroCopter.unity
     guid: 9fe3f55d8fbc69e498173731635e42f5
   - enabled: 0
-    path: Assets/CorgiEngine/Demos/Retro/RetroVania.unity
+    path: Assets/CorgiEngine/Demos/Retro/RetroVania1.unity
     guid: 283c53fb6e78f594580ce1b6cc9db42e
   - enabled: 1
     path: Assets/CorgiEngine/Demos/Corgi3D/Corgi3DxTheHunt.unity

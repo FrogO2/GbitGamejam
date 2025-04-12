@@ -79,11 +79,12 @@ namespace MoreMountains.CorgiEngine
 
         private void CalculateDirection()
         {
-            Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -_mainCamera.transform.position.z));
             Vector2 direction = (mouseWorldPos - _currentProjectile.transform.position).normalized;
+            Vector2 direction2 = (mouseWorldPos - _character.transform.position).normalized;
             
-            if ((_character.IsFacingRight && direction.x < 0) || 
-                (!_character.IsFacingRight && direction.x > 0))
+            if ((!_character.IsFacingRight && direction2.x > 0) || 
+                (_character.IsFacingRight && direction2.x < 0))
             {
                 _character.Flip();
             }
