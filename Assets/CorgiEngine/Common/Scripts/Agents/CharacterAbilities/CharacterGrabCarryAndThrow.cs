@@ -75,6 +75,21 @@ namespace MoreMountains.CorgiEngine
 		protected Vector2 _raycastOrigin;
 		protected Vector2 _recoilVector;
 
+		[Header("ThrowAbility Settings")]
+        [Tooltip("轨迹渲染器")]
+        public LineRenderer TrajectoryLine;
+        [Tooltip("轨迹点数")]
+        public int TrajectoryPoints = 20;
+        [Tooltip("模拟步长")]
+        public float SimulationStep = 0.1f;
+        [Tooltip("障碍物层级")]
+        public LayerMask ObstacleLayers = LayerManager.ObstaclesLayerMask;
+        
+        // 新增私有字段
+        protected bool _isAiming;
+        protected Vector2 _throwDirection;
+        protected Camera _mainCamera;
+        protected GameObject _throwPreview;
 		// animation parameters
 		protected const string _grabbingAnimationParameterName = "Grabbing";
 		protected int _grabbingAnimationParameter;
@@ -96,32 +111,68 @@ namespace MoreMountains.CorgiEngine
 			{
 				CarryParent = this.transform;
 			}
+			_mainCamera = Camera.main;
+            InitializeTrajectory();
 		}
-        
+        protected virtual void InitializeTrajectory()
+        {
+            if (TrajectoryLine != null)
+            {
+                TrajectoryLine.positionCount = TrajectoryPoints;
+                TrajectoryLine.enabled = false;
+				TrajectoryLine.useWorldSpace = true;
+            }
+        }
 		/// <summary>
 		/// Looks for throw and grab inputs
 		/// </summary>
-		protected override void HandleInput()
-		{
-			if (_inputManager.ThrowButton.State.CurrentState == MMInput.ButtonStates.ButtonDown)
-			{
-				if (Carrying)
-				{
-					if (PreventThrowIfCarryingOnGrab && (GetGrababbleObject() != null))
-					{
-						return;
-					}
-					Throw();
-				}
-			}
-			if (_inputManager.GrabButton.State.CurrentState == MMInput.ButtonStates.ButtonDown)
-			{
-				if (!Carrying)
-				{
-					GrabAttempt();
-				}                
-			}
-		}
+        protected override void HandleInput()
+        {
+            // 保持原有抓取逻辑
+            if (_inputManager.GrabButton.State.CurrentState == MMInput.ButtonStates.ButtonDown)
+            {
+                if (!Carrying) GrabAttempt();
+            }
+
+            // 新增鼠标控制逻辑
+            if (Carrying)
+            {
+                HandleMouseInput();
+            }
+            // else
+            // {
+            //     // 保持原有按键投掷逻辑（可选保留）
+            //     if (_inputManager.ThrowButton.State.CurrentState == MMInput.ButtonStates.ButtonDown)
+            //     {
+            //         if (PreventThrowIfCarryingOnGrab && (GetGrababbleObject() != null)) return;
+            //         Throw();
+            //     }
+            // }
+        }
+		// 新增鼠标输入处理方法
+		public override void ProcessAbility()
+        {
+            HandleMouseInput();
+            UpdateTrajectory();
+        }
+        protected virtual void HandleMouseInput()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                StartAiming();
+            }
+
+            if (_isAiming)
+            {
+                UpdateAimDirection();
+                UpdateTrajectory();
+                
+                if (Input.GetMouseButtonUp(0))
+                {
+                    ExecuteMouseThrow();
+                }
+            }
+        }
 
 		/// <summary>
 		/// Tries to grab by casting a raycast
@@ -180,36 +231,164 @@ namespace MoreMountains.CorgiEngine
 		/// <summary>
 		/// Throws the carried object
 		/// </summary>
-		protected virtual void Throw()
+		/// 
+        // 新增瞄准开始方法
+        protected virtual void StartAiming()
+        {
+            _isAiming = true;
+            if (TrajectoryLine != null) TrajectoryLine.enabled = true;
+            CreateThrowPreview();
+        }
+
+        // 新增投掷预览创建
+        protected virtual void CreateThrowPreview()
+        {
+            _throwPreview = new GameObject("ThrowPreview");
+            _throwPreview.transform.position = CarryParent.position;
+            var sr = _throwPreview.AddComponent<SpriteRenderer>();
+            // sr.sprite = CarriedObject.GetComponent<SpriteRenderer>().sprite;
+            sr.color = new Color(1, 1, 1, 0.5f);
+        }
+
+        // 新增方向计算
+		protected virtual void UpdateAimDirection()
 		{
-			if (!AbilityAuthorized)
-			{
-				return;
-			}
+			Vector3 mousePos = _mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -_mainCamera.transform.position.z));
+			// mousePos.z = 0;
+			Vector2 direction = (mousePos - CarryParent.transform.position).normalized;
+            Vector2 direction2 = (mousePos - _character.transform.position).normalized;
+			
+			// 自动翻转角色（保持原有翻转逻辑）
+         	if ((!_character.IsFacingRight && direction2.x > 0) || 
+                (_character.IsFacingRight && direction2.x < 0))
+            {
+                _character.Flip();
+            }
+			
+			// 计算标准化方向（保留原有方向处理）
+			Vector2 rawDirection = (mousePos - CarryParent.position).normalized;
+			_throwDirection = new Vector2(
+				_character.IsFacingRight ? Mathf.Abs(rawDirection.x) : -Mathf.Abs(rawDirection.x),
+				rawDirection.y
+			);
+			// _throwDirection = direction;
+		}
+        // 新增轨迹更新
+		protected virtual void UpdateTrajectory()
+		{
+            if (!_isAiming || CarryParent == null) return;
+
+            Vector2 startPos = CarryParent.transform.position;
+            Vector2 startVelocity = _throwDirection * ThrowForce;
             
-			if (CarriedObject == null)
+            Vector2 previousPoint = startPos;
+            int actualPoints = TrajectoryPoints; // 每次循环前重置为完整点数
+
+            // 强制重置LineRenderer的positionCount
+            TrajectoryLine.positionCount = TrajectoryPoints; // 新增此行
+
+            for (int i = 0; i < TrajectoryPoints; i++)
+            {
+                if (i >= TrajectoryLine.positionCount) break;
+
+                // 计算理论轨迹点
+                float time = i * SimulationStep;
+                Vector2 point = startPos + 
+                    startVelocity * time + 
+                    0.5f * Physics2D.gravity * time * time;
+
+                // 碰撞检测
+                RaycastHit2D hit = Physics2D.Raycast(
+                    previousPoint, 
+                    (point - previousPoint).normalized, 
+                    Vector2.Distance(previousPoint, point), 
+                    ObstacleLayers
+                );
+
+                if (hit.collider != null)
+                {
+                    // 调整最终点为碰撞点
+                    float distance = Vector2.Distance(previousPoint, hit.point);
+                    point = previousPoint + (point - previousPoint).normalized * distance;
+                    actualPoints = i + 1;
+                    TrajectoryLine.positionCount = actualPoints;
+                    TrajectoryLine.SetPosition(i, point);
+                    break;
+                }
+
+                TrajectoryLine.SetPosition(i, point);
+                previousPoint = point;
+            }
+
+            // 隐藏未使用的轨迹点
+            if (actualPoints < TrajectoryPoints)
+            {
+                TrajectoryLine.positionCount = actualPoints;
+            }
+		}
+
+        // 新增鼠标投掷执行
+        protected virtual void ExecuteMouseThrow()
+        {
+            _isAiming = false;
+            if (TrajectoryLine != null) TrajectoryLine.enabled = false;
+            
+            // 调用原有投掷逻辑
+            Throw(_throwDirection);
+            
+            // 清理预览
+            if (_throwPreview != null) Destroy(_throwPreview);
+        }
+		// protected virtual void Throw()
+		// {
+		// 	if (!AbilityAuthorized)
+		// 	{
+		// 		return;
+		// 	}
+            
+		// 	if (CarriedObject == null)
+		// 	{
+		// 		return;
+		// 	}
+
+		// 	int direction = _character.IsFacingRight ? 1 : -1;
+		// 	CarriedObject.Throw(direction, ThrowForce);
+
+		// 	// apply recoil
+		// 	if (RecoilModifier != 0f)
+		// 	{
+		// 		_recoilVector = (direction == 1) ? Vector2.left : Vector2.right;
+		// 		_recoilVector *= RecoilModifier * CarriedObject.Recoil;
+		// 		_controller.AddForce(_recoilVector);
+		// 	}
+
+		// 	StopFeedbacks();
+		// 	CarriedObject = null;
+		// 	CarryingID = -1;
+		// 	Carrying = false;
+		// 	Throwing = true;
+		// }
+		protected virtual void Throw(Vector2 inputDirection)
+		{
+			if (!AbilityAuthorized || CarriedObject == null) return;
+			
+			// 调用原有投掷方法
+			CarriedObject.Throw(inputDirection, ThrowForce);
+
+			// 添加垂直速度分量（保持原有物理系统兼容）
+			if (CarriedObject.TryGetComponent<Rigidbody2D>(out var rb))
 			{
-				return;
+				float verticalForce = Mathf.Clamp(inputDirection.y, -1f, 1f) * ThrowForce;
+				rb.linearVelocity = new Vector2(rb.linearVelocity.x, verticalForce);
 			}
 
-			int direction = _character.IsFacingRight ? 1 : -1;
-			CarriedObject.Throw(direction, ThrowForce);
-
-			// apply recoil
-			if (RecoilModifier != 0f)
-			{
-				_recoilVector = (direction == 1) ? Vector2.left : Vector2.right;
-				_recoilVector *= RecoilModifier * CarriedObject.Recoil;
-				_controller.AddForce(_recoilVector);
-			}
-
+			// 保持原有状态重置
 			StopFeedbacks();
 			CarriedObject = null;
 			CarryingID = -1;
 			Carrying = false;
 			Throwing = true;
 		}
-
 		/// <summary>
 		/// Stops all feedbacks
 		/// </summary>
@@ -230,6 +409,12 @@ namespace MoreMountains.CorgiEngine
 		{
 			Grabbing = false;
 			Throwing = false;
+			if (!Carrying && _isAiming)
+            {
+                _isAiming = false;
+                if (TrajectoryLine != null) TrajectoryLine.enabled = false;
+                if (_throwPreview != null) Destroy(_throwPreview);
+            }
 		}
 
 		/// <summary>
@@ -260,7 +445,11 @@ namespace MoreMountains.CorgiEngine
 		public override void ResetAbility()
 		{
 			base.ResetAbility();
-			Throw();
+			// Throw();
+			Throw(_throwDirection);
+			_isAiming = false;
+            if (TrajectoryLine != null) TrajectoryLine.enabled = false;
+            if (_throwPreview != null) Destroy(_throwPreview);
 			if (_animator != null)
 			{
 				MMAnimatorExtensions.UpdateAnimatorBool(_animator, _grabbingAnimationParameter, false, _character._animatorParameters, _character.PerformAnimatorSanityChecks);

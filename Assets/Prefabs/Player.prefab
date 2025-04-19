@@ -5825,7 +5825,7 @@ MonoBehaviour:
   BlockingMovementStates: 
   BlockingConditionStates: 
   BlockingWeaponStates: 
-  RaycastDirection: {x: 0, y: -1, z: 0}
+  RaycastDirection: {x: 1, y: 0, z: 0}
   RaycastDistance: 1
   DetectionLayerMask:
     serializedVersion: 2
@@ -5835,10 +5835,16 @@ MonoBehaviour:
   Carrying: 0
   CarryingID: -1
   CarriedObject: {fileID: 0}
-  ThrowForce: 1
+  ThrowForce: 20
   RecoilModifier: 1
   Throwing: 0
   PreventThrowIfCarryingOnGrab: 0
+  TrajectoryLine: {fileID: 6456581057130038530}
+  TrajectoryPoints: 50
+  SimulationStep: 0.1
+  ObstacleLayers:
+    serializedVersion: 2
+    m_Bits: 264448
 --- !u!114 &8142255087451268405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5930,7 +5936,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383539409296422}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: de7fd83f41d0e3940b69295c2c0a38c0, type: 3}
   m_Name: 
@@ -90627,6 +90633,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3890646151089839060, guid: 6e1b1358b075b944e8dd1328b156f0c8,
         type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3890646151089839060, guid: 6e1b1358b075b944e8dd1328b156f0c8,
+        type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
@@ -90650,6 +90661,11 @@ PrefabInstance:
       propertyPath: m_MaskInteraction
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6393311560003740378, guid: 6e1b1358b075b944e8dd1328b156f0c8,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 8f155bc954dc47c499c4298f51152b4d, type: 2}
     - target: {fileID: 6393311560003740378, guid: 6e1b1358b075b944e8dd1328b156f0c8,
         type: 3}
       propertyPath: m_Parameters.textureScale.x
