@@ -14,6 +14,14 @@ namespace MoreMountains.InventoryEngine
 		[MMInformation("Add this component to a Trigger box collider 2D and it'll make it pickable, and will add the specified item to its target inventory. Just drag a previously created item into the slot below. For more about how to create items, have a look at the documentation. Here you can also specify how many of that item should be picked when picking the object.",MMInformationAttribute.InformationType.Info,false)]
 		public InventoryItem Item ;
 		
+		[Header("Pick Settings")]
+		[MMInformation("设置拾取按键名称（需在Input Manager中预定义）", MMInformationAttribute.InformationType.Info, false)]
+		public string PickButtonName = "Interact";
+        
+		protected bool _playerInRange = false;
+		protected string _currentPlayerID = "Player1";
+		protected Collider2D _triggeringCollider;
+
 		[Header("Pick Quantity")]
 		/// the initial quantity of that item that should be added to the inventory when picked
 		[Tooltip("the initial quantity of that item that should be added to the inventory when picked")]
@@ -96,16 +104,36 @@ namespace MoreMountains.InventoryEngine
 				return;
 			}
 
-			string playerID = "Player1";
+			_triggeringCollider = collider;
 			InventoryCharacterIdentifier identifier = collider.GetComponent<InventoryCharacterIdentifier>();
-			if (identifier != null)
-			{
-				playerID = identifier.PlayerID;
-			}
-
-			Pick(Item.TargetInventoryName, playerID);
+			_currentPlayerID = identifier != null ? identifier.PlayerID : "Player1";
+			_playerInRange = true;
 		}		
 
+		public virtual void OnTriggerExit2D(Collider2D collider)
+		{
+			if (RequirePlayerTag && (!collider.CompareTag("Player")))
+			{
+				return;
+			}
+            
+			_playerInRange = false;
+			_triggeringCollider = null;
+		}
+		
+		protected virtual void Update()
+		{
+			if (!_playerInRange) return;
+			if (Input.GetButtonDown(PickButtonName))
+			{
+				// 执行拾取逻辑
+				Pick(Item.TargetInventoryName, _currentPlayerID);
+                
+				// 拾取后立即关闭触发（防止连续拾取）
+				_playerInRange = false;
+			}
+		}
+		
 		/// <summary>
 		/// Picks this item and adds it to its target inventory
 		/// </summary>
@@ -206,6 +234,7 @@ namespace MoreMountains.InventoryEngine
 		/// </summary>
 		public virtual bool Pickable()
 		{
+			if (_triggeringCollider == null) return false;
 			if (!PickableIfInventoryIsFull && _targetInventory.NumberOfFreeSlots == 0)
 			{
 				// we make sure that there isn't a place where we could store it

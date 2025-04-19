@@ -124,8 +124,8 @@ namespace MoreMountains.CorgiEngine
 		/// Triggered when this object gets thrown
 		/// </summary>
 		/// <param name="direction"></param>
-		/// <param name="forceMultiplier"></param>
-		public virtual void Throw(int direction, float forceMultiplier)
+		/// <param name="ThrowForce"></param>
+		public virtual void Throw(Vector2 direction, float ThrowForce)
 		{
 			StartCoroutine(ResetCollisions());
 
@@ -140,12 +140,9 @@ namespace MoreMountains.CorgiEngine
 					break;
 			}
 
-			_throwVector = ThrowDirection.normalized;
-			if (direction < 0)
-			{
-				_throwVector.x *= -1f;
-			}
-			_throwVector = _throwVector * Force * forceMultiplier;
+			_throwVector = direction.normalized;
+
+			_throwVector = _throwVector * ThrowForce;
 
 			if (_rigidbody2D != null)
 			{
