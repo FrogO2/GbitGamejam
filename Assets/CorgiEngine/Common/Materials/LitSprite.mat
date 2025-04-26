@@ -36,7 +36,7 @@ Material:
     RenderType: TransparentCutout
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _SmoothnessTextureChannel
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
