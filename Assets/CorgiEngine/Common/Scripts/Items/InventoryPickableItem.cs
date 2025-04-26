@@ -16,7 +16,11 @@ namespace MoreMountains.CorgiEngine
 		/// whether or not this should reset RemainingQuantity when the player respawns
 		[Tooltip("whether or not this should reset RemainingQuantity when the player respawns")]
 		public bool ResetQuantityOnPlayerRespawn = true;
-
+		
+		[Header("Throw")]
+		/// 可投掷物品的预制体
+		[Tooltip("可投掷物品的预制体")]
+		public GameObject ThrowablePrefab;
 		protected override void PickSuccess()
 		{
 			base.PickSuccess ();
