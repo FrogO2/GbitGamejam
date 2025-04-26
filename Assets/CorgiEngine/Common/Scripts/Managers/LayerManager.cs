@@ -21,6 +21,7 @@ namespace MoreMountains.CorgiEngine
 		private static int MovingOneWayPlatformsLayer = 20;
 		private static int StairsLayer = 28;
 		private static int MidHeightOneWayPlatformsLayer = 26;
+		private static int VentLayer = 29;
 
 		public static int PlatformsLayerMask = 1 << PlatformsLayer;
 		public static int OneWayPlatformsLayerMask = 1 << OneWayPlatformsLayer;
@@ -33,7 +34,8 @@ namespace MoreMountains.CorgiEngine
 		public static int MovingOneWayPlatformsMask = 1 << MovingOneWayPlatformsLayer;
 		public static int StairsLayerMask = 1 << StairsLayer;
 		public static int MidHeightOneWayPlatformsLayerMask = 1 << MidHeightOneWayPlatformsLayer;
+		public static int VentLayerMask = 1 << VentLayer;
 
-		public static int ObstaclesLayerMask = LayerManager.PlatformsLayerMask | LayerManager.MovingPlatformsLayerMask | LayerManager.OneWayPlatformsLayerMask;
+		public static int ObstaclesLayerMask = LayerManager.PlatformsLayerMask | LayerManager.MovingPlatformsLayerMask | LayerManager.OneWayPlatformsLayerMask | LayerManager.VentLayerMask;
 	}
 }
