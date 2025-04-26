@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 
+[Obsolete("There will be bugs when the object is a child of certain other objects. If you face such bugs, copy the material and change tiling instead of using this script.")]
 [ExecuteInEditMode]
 public class ReCalcPlaneTexture : MonoBehaviour
 {
