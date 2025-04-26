@@ -38,6 +38,10 @@ namespace MoreMountains.CorgiEngine
 		[Tooltip("whether or not this Character is grabbing something right now")]
 		public bool Grabbing = false;
 
+		[Header("Hand Position")]
+		[Tooltip("抓取时物体的本地位置偏移")]
+		public Vector3 CarryLocalOffset = new Vector3(0.5f, -0.2f, 0); // 右手位置偏移
+
 		[Header("Carry")]
 
 		/// a Transform used to attach carried objects to
@@ -213,15 +217,31 @@ namespace MoreMountains.CorgiEngine
 		/// <summary>
 		/// Sets the ability in carrying mode
 		/// </summary>
+		// protected virtual void Grab()
+		// {
+		// 	if (!AbilityAuthorized)
+		// 	{
+		// 		return;
+		// 	}
+            
+		// 	Carrying = true;
+		// 	CarryingID = CarriedObject.CarryingAnimationID;
+		// 	CarriedObject.Grab(CarryParent);
+		// 	Grabbing = true;
+		// 	PlayAbilityStartFeedbacks();
+		// 	MMCharacterEvent.Trigger(_character, MMCharacterEventTypes.Grab, MMCharacterEvent.Moments.Start);
+		// }
 		protected virtual void Grab()
 		{
 			if (!AbilityAuthorized)
 			{
 				return;
 			}
-            
+			
 			Carrying = true;
 			CarryingID = CarriedObject.CarryingAnimationID;
+			CarriedObject.CarryOffset = CarryLocalOffset;
+			
 			CarriedObject.Grab(CarryParent);
 			Grabbing = true;
 			PlayAbilityStartFeedbacks();
@@ -278,7 +298,16 @@ namespace MoreMountains.CorgiEngine
 		{
             if (!_isAiming || CarryParent == null) return;
 
-            Vector2 startPos = CarryParent.transform.position;
+			float xOffset = _character.IsFacingRight ? 
+				CarryLocalOffset.x : 
+				-CarryLocalOffset.x;
+			Vector3 finalOffset = new Vector3(
+				xOffset,
+				CarryLocalOffset.y,
+				CarryLocalOffset.z
+			);
+
+            Vector2 startPos = CarryParent.transform.position + finalOffset;
             Vector2 startVelocity = _throwDirection * ThrowForce;
             
             Vector2 previousPoint = startPos;

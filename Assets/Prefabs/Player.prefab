@@ -5831,6 +5831,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8448
   Grabbing: 0
+  CarryLocalOffset: {x: 0.5, y: -0.5, z: 0}
   CarryParent: {fileID: 6120759312253308241}
   Carrying: 0
   CarryingID: -1
